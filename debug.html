@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API调试页面</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .debug-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ccc;
+      }
+      .error {
+        color: red;
+      }
+      .success {
+        color: green;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 10px 0;
+      }
+      textarea {
+        width: 100%;
+        height: 200px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔍 API调试页面</h1>
+
+    <div class="debug-section">
+      <h3>当前配置</h3>
+      <p><strong>Bot ID:</strong> <span id="botId"></span></p>
+      <p><strong>API URL:</strong> <span id="apiUrl"></span></p>
+      <p><strong>Token:</strong> <span id="token"></span></p>
+    </div>
+
+    <div class="debug-section">
+      <h3>测试API调用</h3>
+      <button onclick="testAPI()">测试API连接</button>
+      <div id="apiResult"></div>
+    </div>
+
+    <div class="debug-section">
+      <h3>详细日志</h3>
+      <textarea id="debugLog" readonly></textarea>
+      <button onclick="clearLog()">清空日志</button>
+    </div>
+
+    <script>
+      const COZE_CONFIG = {
+        botId: "7541398190961705023",
+        token: "sk-f15ba702adf3419197b32a9cf9a16da1",
+        apiUrl: "https://api.coze.cn/open_api/v2/chat",
+        conversationId: null,
+      };
+
+      function log(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        const logArea = document.getElementById("debugLog");
+        logArea.value += `[${timestamp}] ${message}\n`;
+        logArea.scrollTop = logArea.scrollHeight;
+        console.log(message);
+      }
+
+      function clearLog() {
+        document.getElementById("debugLog").value = "";
+      }
+
+      function displayConfig() {
+        document.getElementById("botId").textContent = COZE_CONFIG.botId;
+        document.getElementById("apiUrl").textContent = COZE_CONFIG.apiUrl;
+        document.getElementById("token").textContent =
+          COZE_CONFIG.token.substring(0, 10) + "...";
+      }
+
+      async function testAPI() {
+        const resultDiv = document.getElementById("apiResult");
+        resultDiv.innerHTML = "<p>正在测试API连接...</p>";
+
+        log("开始API测试");
+        log(`使用Bot ID: ${COZE_CONFIG.botId}`);
+        log(`API URL: ${COZE_CONFIG.apiUrl}`);
+        log(`Token: ${COZE_CONFIG.token.substring(0, 10)}...`);
+
+        try {
+          const requestBody = {
+            bot_id: COZE_CONFIG.botId,
+            user: "debug_user",
+            query: "你好，这是一个测试消息",
+            chat_history: [],
+            stream: false,
+          };
+
+          log(`请求体: ${JSON.stringify(requestBody, null, 2)}`);
+
+          const response = await fetch(COZE_CONFIG.apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${COZE_CONFIG.token}`,
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          log(`响应状态: ${response.status} ${response.statusText}`);
+
+          const responseText = await response.text();
+          log(`响应内容: ${responseText}`);
+
+          if (!response.ok) {
+            throw new Error(
+              `API请求失败: ${response.status} - ${responseText}`
+            );
+          }
+
+          const data = JSON.parse(responseText);
+
+          resultDiv.innerHTML = `
+                    <div class="success">
+                        <h4>✅ API调用成功</h4>
+                        <p><strong>响应数据:</strong></p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+
+          log("API测试成功");
+        } catch (error) {
+          log(`API测试失败: ${error.message}`);
+
+          resultDiv.innerHTML = `
+                    <div class="error">
+                        <h4>❌ API调用失败</h4>
+                        <p><strong>错误信息:</strong> ${error.message}</p>
+                    </div>
+                `;
+        }
+      }
+
+      // 页面加载时显示配置
+      window.addEventListener("DOMContentLoaded", function () {
+        displayConfig();
+        log("调试页面已加载");
+      });
+    </script>
+  </body>
+</html>

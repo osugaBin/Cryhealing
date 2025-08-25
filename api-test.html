@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coze API 测试</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      button {
+        background: #8b5cf6;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #7c3aed;
+      }
+      .result {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+        white-space: pre-wrap;
+        font-family: monospace;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .error {
+        background: #fee;
+        border: 1px solid #fcc;
+      }
+      .success {
+        background: #efe;
+        border: 1px solid #cfc;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin: 5px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔮 Coze API 调试工具</h1>
+
+      <div class="test-section">
+        <h3>API 配置信息</h3>
+        <div id="config-info"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>测试消息发送</h3>
+        <input
+          type="text"
+          id="test-message"
+          placeholder="输入测试消息"
+          value="你好，请介绍一下白水晶的功效"
+        />
+        <button onclick="testAPI()">发送测试消息</button>
+        <button onclick="clearResults()">清空结果</button>
+        <div id="api-result" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>原始响应数据</h3>
+        <div id="raw-response" class="result"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>解析后的消息</h3>
+        <div id="parsed-message" class="result"></div>
+      </div>
+    </div>
+
+    <script>
+      // Coze API 配置
+      const COZE_CONFIG = {
+        botId: "7541398190961705023",
+        token:
+          "pat_2epjuhkDAZi6CXmOPziMsMC9EYUWrbJhhqzH82AGN9pZFMwMaAnMvFyKFRhSZHJ8",
+        apiUrl: "https://api.coze.cn/open_api/v2/chat",
+        conversationId: null,
+      };
+
+      // 显示配置信息
+      function showConfig() {
+        const configDiv = document.getElementById("config-info");
+        configDiv.innerHTML = `
+                <strong>Bot ID:</strong> ${COZE_CONFIG.botId}<br>
+                <strong>Token:</strong> ${COZE_CONFIG.token.substring(
+                  0,
+                  10
+                )}...<br>
+                <strong>API URL:</strong> ${COZE_CONFIG.apiUrl}<br>
+                <strong>Conversation ID:</strong> ${
+                  COZE_CONFIG.conversationId || "未设置"
+                }
+            `;
+      }
+
+      // 测试 API 调用
+      async function testAPI() {
+        const message = document.getElementById("test-message").value.trim();
+        if (!message) {
+          alert("请输入测试消息");
+          return;
+        }
+
+        const resultDiv = document.getElementById("api-result");
+        const rawDiv = document.getElementById("raw-response");
+        const parsedDiv = document.getElementById("parsed-message");
+
+        resultDiv.innerHTML = "正在发送请求...";
+        resultDiv.className = "result";
+
+        try {
+          const requestBody = {
+            bot_id: COZE_CONFIG.botId,
+            user: "user",
+            query: message,
+            chat_history: [],
+            stream: false,
+            ...(COZE_CONFIG.conversationId && {
+              conversation_id: COZE_CONFIG.conversationId,
+            }),
+          };
+
+          console.log("发送请求:", requestBody);
+
+          const response = await fetch(COZE_CONFIG.apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${COZE_CONFIG.token}`,
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          console.log("响应状态:", response.status, response.statusText);
+
+          if (!response.ok) {
+            throw new Error(
+              `API 请求失败: ${response.status} ${response.statusText}`
+            );
+          }
+
+          const data = await response.json();
+          console.log("响应数据:", data);
+
+          // 显示原始响应
+          rawDiv.innerHTML = JSON.stringify(data, null, 2);
+          rawDiv.className = "result success";
+
+          // 更新会话ID
+          if (data.conversation_id) {
+            COZE_CONFIG.conversationId = data.conversation_id;
+            showConfig();
+          }
+
+          // 解析消息
+          let parsedMessage = "";
+          if (data.messages && data.messages.length > 0) {
+            const lastMessage = data.messages[data.messages.length - 1];
+            parsedMessage = lastMessage.content || "未找到消息内容";
+            parsedDiv.innerHTML = `从 messages 数组解析: ${parsedMessage}`;
+          } else if (data.answer) {
+            parsedMessage = data.answer;
+            parsedDiv.innerHTML = `从 answer 字段解析: ${parsedMessage}`;
+          } else {
+            parsedMessage = "未找到可解析的消息内容";
+            parsedDiv.innerHTML = parsedMessage;
+          }
+
+          resultDiv.innerHTML = `✅ API 调用成功\n解析的消息: ${parsedMessage}`;
+          resultDiv.className = "result success";
+        } catch (error) {
+          console.error("API 调用失败:", error);
+          resultDiv.innerHTML = `❌ API 调用失败:\n${error.message}`;
+          resultDiv.className = "result error";
+          rawDiv.innerHTML = "请求失败，无响应数据";
+          parsedDiv.innerHTML = "请求失败，无法解析消息";
+        }
+      }
+
+      // 清空结果
+      function clearResults() {
+        document.getElementById("api-result").innerHTML = "";
+        document.getElementById("raw-response").innerHTML = "";
+        document.getElementById("parsed-message").innerHTML = "";
+      }
+
+      // 页面加载时显示配置
+      document.addEventListener("DOMContentLoaded", function () {
+        showConfig();
+      });
+
+      // 回车键发送消息
+      document
+        .getElementById("test-message")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            testAPI();
+          }
+        });
+    </script>
+  </body>
+</html>

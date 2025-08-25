@@ -1,0 +1,51 @@
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 日志文件
+*.log
+
+# 临时文件
+*.tmp
+*.temp
+
+# 备份文件
+*.backup
+*.bak
+
+# 配置文件（包含敏感信息）
+config.js
+
+# 缓存文件
+.cache/
+node_modules/
+
+# 构建输出
+dist/
+build/
+
+# 环境变量文件
+.env
+.env.local
+.env.production
+
+# 图片文件（如果太大）
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+
+# PDF文件
+*.pdf
+
+# 其他大文件
+files/
+s+/

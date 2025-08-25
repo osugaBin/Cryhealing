@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>水晶疗愈智能助手</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="chat-container">
+      <header class="chat-header">
+        <div class="header-content">
+          <i class="fas fa-gem header-icon"></i>
+          <h1>水晶疗愈智能助手</h1>
+          <p>专业的水晶疗愈指导与咨询</p>
+        </div>
+      </header>
+
+      <div class="chat-messages" id="chatMessages">
+        <div class="message bot-message">
+          <div class="message-avatar">
+            <i class="fas fa-gem"></i>
+          </div>
+          <div class="message-content">
+            <p>
+              您好！我是您的水晶疗愈智能助手。我可以为您提供水晶选择建议、疗愈方法指导、能量清洁技巧等专业咨询。请告诉我您想了解什么？
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input-container">
+        <div class="input-wrapper">
+          <input
+            type="text"
+            id="messageInput"
+            placeholder="请输入您的问题..."
+            maxlength="500"
+          />
+          <button id="sendButton" class="send-button">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+        <div class="input-footer">
+          <span class="char-count">0/500</span>
+          <div class="quick-actions">
+            <button class="quick-btn" data-text="推荐适合我的水晶">
+              <i class="fas fa-star"></i> 水晶推荐
+            </button>
+            <button class="quick-btn" data-text="如何平衡和激活脉轮">
+              <i class="fas fa-yin-yang"></i> 脉轮平衡
+            </button>
+            <button class="quick-btn" data-text="水晶疗愈的基础知识">
+              <i class="fas fa-book"></i> 基础知识
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-spinner">
+        <i class="fas fa-gem fa-spin"></i>
+        <p>正在思考中...</p>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+    <script src="coze-integration.js"></script>
+    <script src="script.js?v=9"></script>
+  </body>
+</html>
