@@ -148,13 +148,19 @@ class CrystalHealingChat {
 
     // 使用Marked解析markdown格式
     let formattedContent;
-    if (type === "bot" && window.marked) {
-      // 对于机器人消息，使用markdown解析
-      try {
-        formattedContent = marked.parse(content);
-      } catch (error) {
-        console.warn("Markdown解析失败，使用原始文本:", error);
-        formattedContent = `<p>${content.replace(/\n/g, "<br>")}</p>`;
+    if (type === "bot") {
+      // 对于机器人消息，尝试markdown解析
+      if (window.marked && typeof marked.parse === 'function') {
+        try {
+          formattedContent = marked.parse(content);
+        } catch (error) {
+          console.warn("Marked解析失败，使用备用格式化:", error);
+          formattedContent = this.fallbackMarkdownFormat(content);
+        }
+      } else {
+        // 如果marked未加载，使用备用格式化
+        console.warn("Marked库未加载，使用备用格式化");
+        formattedContent = this.fallbackMarkdownFormat(content);
       }
     } else {
       // 对于用户消息，只处理换行符
@@ -172,6 +178,43 @@ class CrystalHealingChat {
     }
 
     return messageDiv;
+  }
+
+  // 备用Markdown格式化方法
+  fallbackMarkdownFormat(content) {
+    let formatted = content;
+    
+    // 处理标题
+    formatted = formatted.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+    formatted = formatted.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+    formatted = formatted.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+    
+    // 处理粗体和斜体
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    
+    // 处理行内代码
+    formatted = formatted.replace(/`(.*?)`/g, '<code>$1</code>');
+    
+    // 处理列表
+    formatted = formatted.replace(/^\* (.*$)/gim, '<li>$1</li>');
+    formatted = formatted.replace(/^- (.*$)/gim, '<li>$1</li>');
+    
+    // 包装列表项
+    if (formatted.includes('<li>')) {
+      formatted = formatted.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+    }
+    
+    // 处理换行
+    formatted = formatted.replace(/\n\n/g, '</p><p>');
+    formatted = formatted.replace(/\n/g, '<br>');
+    
+    // 包装段落
+    if (!formatted.includes('<h') && !formatted.includes('<ul>')) {
+      formatted = `<p>${formatted}</p>`;
+    }
+    
+    return formatted;
   }
 
   setInputState(enabled) {

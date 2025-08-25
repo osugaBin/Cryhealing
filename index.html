@@ -69,8 +69,23 @@
       </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <script>
+      // 备用CDN加载方案
+      if (typeof marked === 'undefined') {
+        console.warn('主CDN加载失败，尝试备用CDN');
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/marked@9.1.6/marked.min.js';
+        script.onload = function() {
+          console.log('备用CDN加载成功');
+        };
+        script.onerror = function() {
+          console.error('所有CDN都加载失败，将使用简单的文本格式化');
+        };
+        document.head.appendChild(script);
+      }
+    </script>
     <script src="coze-integration.js"></script>
-    <script src="script.js?v=9"></script>
+    <script src="script.js?v=10"></script>
   </body>
 </html>
